@@ -1,10 +1,18 @@
+/*
+ * @Author:  qiuwenbin <qiuwenbin@wshifu.com>
+ * @Date: 2023-03-28 14:07:55
+ * @LastEditors: qiuwenbin
+ * @LastEditTime: 2023-03-29 15:04:33
+ * @Description: 
+ */
 // 公共配置
 import { Configuration, DefinePlugin } from "webpack";
 import HtmlWebpackPlugin from "html-webpack-plugin";
 import * as dotenv from "dotenv";
 
 const path = require("path");
-
+const cssRegex = /\.css$/;
+const lessRegex = /\.less$/;
 console.log('NODE_ENV', process.env.NODE_ENV) // 区分开发模式还是打包构建模式可以用process.env.NODE_ENV
 console.log('BASE_ENV', process.env.BASE_ENV) // 业务环境 dev test pre prod
 
@@ -12,6 +20,20 @@ console.log('BASE_ENV', process.env.BASE_ENV) // 业务环境 dev test pre prod
 const envConfig = dotenv.config({
   path: path.resolve(__dirname, "../env/.env." + process.env.BASE_ENV),
 });
+const styleLoadersArray = [
+  "style-loader",
+  {
+    loader: "css-loader",
+    options: {
+      modules: {
+        // localIdentName：配置生成的css类名组成（path路径，name文件名，local原来的css类名, hash: base64:5拼接生成hash值5位，具体位数可根据需要设置
+        // 如下的配置（localIdentName: '[local]__[hash:base64:5]'）：生成的css类名类似 class="edit__275ih"这种，既能达到scoped的效果，又保留原来的css类名(edit)
+        localIdentName: "[local]__[hash:5]",
+        
+      },
+    },
+  },
+];
 
 const baseConfig: Configuration = {
   entry: path.join(__dirname, "../src/index.tsx"), // 入口文件
@@ -21,6 +43,7 @@ const baseConfig: Configuration = {
     path: path.join(__dirname, "../dist"), // 打包结果输出路径
     clean: true, // webpack4需要配置clean-webpack-plugin来删除dist文件,webpack5内置了
     publicPath: "/", // 打包后文件的公共前缀路径
+    assetModuleFilename:'images/[hash][ext][query]'
   },
   // loader 配置
   module: {
@@ -30,8 +53,40 @@ const baseConfig: Configuration = {
         use: "babel-loader"
       },
       {
-        test: /.css$/, //匹配 css 文件
-        use: ["style-loader", "css-loader"],
+        test: cssRegex, //匹配 css 文件
+        use: [...styleLoadersArray,'postcss-loader'],
+      },
+      {
+        test:lessRegex, // 匹配less文件
+        use:[
+          ...styleLoadersArray,
+          {
+            loader:"less-loader",
+            options:{
+              lessOptions: {
+                importLoaders: 2,
+                // 可以加入modules: true，这样就不需要在less文件名加module了
+                modules: true,
+                // 如果要在less中写类型js的语法，需要加这一个配置
+                javascriptEnabled: true
+              },
+            }
+          },
+          'postcss-loader'
+        ]
+
+      },
+      {
+        test: /\.(png|jpe|jpg|gif|svg)$/i, // 匹配图片文件
+        type: "asset", // type选择asset
+        parser: {
+          dataUrlCondition: {
+            maxSize: 20 * 1024, // 小于10kb转base64
+          }
+        },
+        generator:{ 
+          filename:'static/images/[hash][ext][query]', // 文件输出目录和命名
+        },
       },
     ],
   },
