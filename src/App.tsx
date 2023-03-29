@@ -2,15 +2,16 @@
  * @Author:  qiuwenbin <qiuwenbin@wshifu.com>
  * @Date: 2023-03-28 14:11:21
  * @LastEditors: qiuwenbin
- * @LastEditTime: 2023-03-29 15:05:41
+ * @LastEditTime: 2023-03-29 15:29:34
  * @Description: 
  */
 import styles from './App.less';
-import img from '@/assets/image/1.jpg'
+import img from '@/assets/image/1.jpg';
+import testJson from './test.json'
 console.log('NODE_ENV', process.env.NODE_ENV)
 console.log('BASE_ENV', process.env.BASE_ENV)
 console.log("process.env", process.env);
-
+console.log('testJson====',testJson)
 
 function App() {
   return <>

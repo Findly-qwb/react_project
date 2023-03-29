@@ -2,7 +2,7 @@
  * @Author:  qiuwenbin <qiuwenbin@wshifu.com>
  * @Date: 2023-03-28 14:07:55
  * @LastEditors: qiuwenbin
- * @LastEditTime: 2023-03-29 15:04:33
+ * @LastEditTime: 2023-03-29 15:40:11
  * @Description: 
  */
 // 公共配置
@@ -29,7 +29,7 @@ const styleLoadersArray = [
         // localIdentName：配置生成的css类名组成（path路径，name文件名，local原来的css类名, hash: base64:5拼接生成hash值5位，具体位数可根据需要设置
         // 如下的配置（localIdentName: '[local]__[hash:base64:5]'）：生成的css类名类似 class="edit__275ih"这种，既能达到scoped的效果，又保留原来的css类名(edit)
         localIdentName: "[local]__[hash:5]",
-        
+
       },
     },
   },
@@ -43,7 +43,7 @@ const baseConfig: Configuration = {
     path: path.join(__dirname, "../dist"), // 打包结果输出路径
     clean: true, // webpack4需要配置clean-webpack-plugin来删除dist文件,webpack5内置了
     publicPath: "/", // 打包后文件的公共前缀路径
-    assetModuleFilename:'images/[hash][ext][query]'
+    assetModuleFilename: 'images/[hash][ext][query]'
   },
   // loader 配置
   module: {
@@ -54,15 +54,15 @@ const baseConfig: Configuration = {
       },
       {
         test: cssRegex, //匹配 css 文件
-        use: [...styleLoadersArray,'postcss-loader'],
+        use: [...styleLoadersArray, 'postcss-loader'],
       },
       {
-        test:lessRegex, // 匹配less文件
-        use:[
+        test: lessRegex, // 匹配less文件
+        use: [
           ...styleLoadersArray,
           {
-            loader:"less-loader",
-            options:{
+            loader: "less-loader",
+            options: {
               lessOptions: {
                 importLoaders: 2,
                 // 可以加入modules: true，这样就不需要在less文件名加module了
@@ -84,10 +84,18 @@ const baseConfig: Configuration = {
             maxSize: 20 * 1024, // 小于10kb转base64
           }
         },
-        generator:{ 
-          filename:'static/images/[hash][ext][query]', // 文件输出目录和命名
+        generator: {
+          filename: 'static/images/[hash][ext][query]', // 文件输出目录和命名
         },
       },
+      {
+        test: /\.json$/,
+        type: "asset/source",
+        generator: {
+          // 这里专门针对json文件的处理
+          filename: "static/json/[name].[hash][ext][query]",
+        },
+      }
     ],
   },
   resolve: {
