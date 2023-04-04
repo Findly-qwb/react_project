@@ -2,17 +2,20 @@
  * @Author:  qiuwenbin <qiuwenbin@wshifu.com>
  * @Date: 2023-03-28 14:07:55
  * @LastEditors: qiuwenbin
- * @LastEditTime: 2023-03-29 15:40:11
+ * @LastEditTime: 2023-04-04 14:04:04
  * @Description: 
  */
 // 公共配置
 import { Configuration, DefinePlugin } from "webpack";
 import HtmlWebpackPlugin from "html-webpack-plugin";
+import webpackBar from 'webpackbar';
 import * as dotenv from "dotenv";
 
 const path = require("path");
+const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const cssRegex = /\.css$/;
 const lessRegex = /\.less$/;
+const isDev = process.env.NODE_ENV === 'development';
 console.log('NODE_ENV', process.env.NODE_ENV) // 区分开发模式还是打包构建模式可以用process.env.NODE_ENV
 console.log('BASE_ENV', process.env.BASE_ENV) // 业务环境 dev test pre prod
 
@@ -21,7 +24,7 @@ const envConfig = dotenv.config({
   path: path.resolve(__dirname, "../env/.env." + process.env.BASE_ENV),
 });
 const styleLoadersArray = [
-  "style-loader",
+  isDev?"style-loader":MiniCssExtractPlugin.loader,
   {
     loader: "css-loader",
     options: {
@@ -29,7 +32,6 @@ const styleLoadersArray = [
         // localIdentName：配置生成的css类名组成（path路径，name文件名，local原来的css类名, hash: base64:5拼接生成hash值5位，具体位数可根据需要设置
         // 如下的配置（localIdentName: '[local]__[hash:base64:5]'）：生成的css类名类似 class="edit__275ih"这种，既能达到scoped的效果，又保留原来的css类名(edit)
         localIdentName: "[local]__[hash:5]",
-
       },
     },
   },
@@ -39,18 +41,19 @@ const baseConfig: Configuration = {
   entry: path.join(__dirname, "../src/index.tsx"), // 入口文件
   // 打包出口文件
   output: {
-    filename: "static/js/[name].js", // 每个输出js的名称
+    filename: "static/js/[name].[chunkhash:8].js", // 每个输出js的名称
     path: path.join(__dirname, "../dist"), // 打包结果输出路径
     clean: true, // webpack4需要配置clean-webpack-plugin来删除dist文件,webpack5内置了
     publicPath: "/", // 打包后文件的公共前缀路径
-    assetModuleFilename: 'images/[hash][ext][query]'
+    assetModuleFilename: 'images/[name].[contenthash:8][ext]'
   },
   // loader 配置
   module: {
     rules: [
       {
         test: /.(ts|tsx)$/, // 匹配.ts, tsx文件
-        use: "babel-loader"
+        exclude: /node_modules/,
+        use: ["thread-loader","babel-loader"]
       },
       {
         test: cssRegex, //匹配 css 文件
@@ -85,7 +88,7 @@ const baseConfig: Configuration = {
           }
         },
         generator: {
-          filename: 'static/images/[hash][ext][query]', // 文件输出目录和命名
+          filename: 'static/images/[name].[contenthash:8][ext]', // 文件输出目录和命名
         },
       },
       {
@@ -131,7 +134,15 @@ const baseConfig: Configuration = {
       "process.env.BASE_ENV": JSON.stringify(process.env.BASE_ENV),
       "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV),
     }),
+    new webpackBar({
+      color:"#85d",
+      basic:false,
+      profile:false
+    })
   ],
+  cache:{
+    type:"filesystem", //使用文件缓存
+  }
 };
 
 export default baseConfig
